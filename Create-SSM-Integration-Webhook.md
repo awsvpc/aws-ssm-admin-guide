@@ -1,3 +1,4 @@
+'''
 Creating webhook integrations for Automation
 
 To send messages using webhooks during an automation, create an integration. Integrations can be invoked during an automation by using the aws:invokeWebhook action in your runbook. If you haven't already created a webhook, see Creating webhooks for integrations. To learn more about the aws:invokeWebhook action, see aws:invokeWebhook – Invoke an Automation webhook integration.
@@ -41,3 +42,5 @@ Protocol must be HTTPS.
 Custom request headers are supported.
 A default request body can be specified.
 The default request body can be overridden when an integration is invoked by using the aws:invokeWebhook action.
+
+'''
