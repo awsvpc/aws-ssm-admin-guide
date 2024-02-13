@@ -1,6 +1,6 @@
-<pre>
 ## Creating webhook integrations for Automation
 
+<pre>
 To send messages using webhooks during an automation, create an integration. Integrations can be invoked during an automation by using the aws:invokeWebhook action in your runbook. If you haven't already created a webhook, see Creating webhooks for integrations. To learn more about the aws:invokeWebhook action, see aws:invokeWebhook – Invoke an Automation webhook integration.
 As shown in the following procedures, you can create an integration by using either the Systems Manager Automation console or your preferred command line tool.
 Creating integrations (console)
