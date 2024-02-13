@@ -1,0 +1,15 @@
+#https://docs.aws.amazon.com/systems-manager/latest/userguide/automation-handling-timeouts.html
+- name: verifyImageAvailability
+  action: 'aws:waitForAwsResourceProperty'
+  timeoutSeconds: 600
+  isCritical: false
+  onFailure: 'step:getCurrentImageState'
+  inputs:
+    Service: ec2
+    Api: DescribeImages
+    ImageIds:
+      - '{{ createImage.newImageId }}'
+    PropertySelector: '$.Images[0].State'
+    DesiredValues:
+      - available
+  nextStep: copyImage
