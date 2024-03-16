@@ -1,0 +1,139 @@
+aws ssm describe-instance-information --filter "Key=InstanceIds,Values=xxx"
+
+description: "changeme"
+schemaVersion: '0.3'
+assumeRole: '{{AutomationAssumeRole}}'
+outputs:
+  - runShellCommandLinux.Output
+  - runPowerShellCommand.Output
+  - runShellCommandMac.Output
+parameters:
+  AutomationAssumeRole:
+    default: ''
+    type: String
+  InstanceId:
+    description: (Required) EC2 InstanceId to run command
+    type: String
+mainSteps:
+
+  - name: GetInstance
+    action: 'aws:executeAwsApi'
+    inputs:
+      Service: ssm
+      Api: DescribeInstanceInformation
+      Filters:
+        - Key: InstanceIds
+          Values:
+            - '{{ InstanceId }}'
+    outputs:
+      - Name: myInstance
+        Selector: '$.InstanceInformationList[0].InstanceId'
+        Type: String
+      - Name: platform
+        Selector: '$.InstanceInformationList[0].PlatformType'
+        Type: String
+      - Name: PingStatus
+        Selector: '$.InstanceInformationList[0].PingStatus'
+        Type: String
+      - Name: ResourceType
+        Selector: '$.InstanceInformationList[0].ResourceType'
+        Type: String
+  - name: SelectOnlineInstances
+    action: 'aws:branch'
+    isEnd: true
+    inputs:
+      Choices:
+        - And:
+            - Variable: '{{GetInstance.PingStatus}}'
+              StringEquals: Online
+            - Variable: '{{GetInstance.ResourceType}}'
+              StringEquals: EC2Instance
+          NextStep: ChoosePlatform
+  - name: ChoosePlatform
+    action: 'aws:branch'
+    isEnd: true
+    inputs:
+      Choices:
+        - NextStep: runPowerShellCommand
+          Variable: '{{GetInstance.platform}}'
+          StringEquals: Windows
+        - NextStep: runShellCommandLinux
+          Variable: '{{GetInstance.platform}}'
+          StringEquals: Linux
+        - NextStep: runShellCommandMac
+          Variable: '{{GetInstance.platform}}'
+          StringEquals: MacOS
+  - name: runShellCommandLinux
+    action: 'aws:runCommand'
+    isEnd: true
+    inputs:
+      DocumentName: AWS-RunShellScript
+      InstanceIds:
+        - '{{GetInstance.myInstance}}'
+      Parameters:
+        commands:
+          - echo "hello from linux"
+  - name: runPowerShellCommand
+    action: 'aws:runCommand'
+    isEnd: true
+    inputs:
+      DocumentName: AWS-RunPowerShellScript
+      InstanceIds:
+        - '{{GetInstance.myInstance}}'
+      Parameters:
+        commands:
+          - Write-Output "hello from windows"
+  - name: runShellCommandMac
+    action: 'aws:runCommand'
+    isEnd: true
+    inputs:
+      DocumentName: AWS-RunShellScript
+      InstanceIds:
+        - '{{GetInstance.myInstance}}'
+      Parameters:
+        commands:
+          - echo "hello from mac"
+
+
+
+################3
+
+...
+"mainSteps": [
+              {
+                "name": "GetInstanceStatus",
+                "action":"aws:executeAwsApi",
+                "inputs": {
+                  "Service": "ec2",
+                  "Api": "DescribeInstanceStatus",
+                  "InstanceIds": [
+                    "{{InstanceId}}"
+                  ]
+                 },
+                 "outputs":[
+                   {
+                     "Name":"InstanceState",
+                     "Selector": "$.InstanceStatuses[0].InstanceState.Name",
+                     "Type": "String"
+                   }
+                 ]
+              },
+              {
+                "name": "CheckInstanceStatus",
+                "action": "aws:branch",
+                "isEnd": true,
+                "inputs": {
+                  "Choices": [
+                    {
+                      "NextStep": "TheRestOfMyRunbook",
+                      "Variable": "{{GetInstanceStatus.InstanceState}}",
+                      "StringEquals": "running"
+                    }
+                  ]
+                }
+              },
+              {
+                "name": "TheRestOfMyRunbook",
+                ...
+              },
+              ...
